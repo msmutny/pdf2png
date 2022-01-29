@@ -1,0 +1,40 @@
+# Run `docker-compose build` to build an image for api and workers containers.
+# Run `docker-compose up` to run all containers.
+
+version: "3.4"
+
+services:
+  api:
+    build:
+      context: ./
+    image: pdfservice
+    ports:
+      - 10443:10443
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - DATABASE_URL=sqlite:////data/database.db
+    volumes:
+      - ./data:/data
+    restart: on-failure
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    expose:
+      - 5672
+      - 15672
+    ports:
+      - 5672:5672
+      - 15672:15672
+    restart: on-failure
+
+  workers:
+    image: pdfservice
+    entrypoint: dramatiq app.worker
+    restart: on-failure
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - DATABASE_URL=sqlite:////data/database.db
+    volumes:
+      - ./data:/data
+    depends_on:
+      - rabbitmq

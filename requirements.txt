@@ -1,0 +1,12 @@
+dramatiq[redis, watch]
+fastapi
+pydantic[dotenv]
+psycopg2
+sqlmodel
+uvicorn[standard]
+pdf2image
+poppler-utils
+pika
+python-multipart
+starlette
+SQLAlchemy
