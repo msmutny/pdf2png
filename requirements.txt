@@ -1,12 +1,12 @@
-dramatiq[redis, watch]
-fastapi
-pydantic[dotenv]
-psycopg2
-sqlmodel
-uvicorn[standard]
-pdf2image
-poppler-utils
-pika
-python-multipart
-starlette
-SQLAlchemy
+dramatiq[redis, watch]~=1.12.3
+fastapi~=0.73.0
+pydantic[dotenv]~=1.9.0
+psycopg2~=2.9.3
+sqlmodel~=0.0.6
+uvicorn[standard]~=0.17.1
+pdf2image~=1.16.0
+poppler-utils~=0.1.0
+pika~=1.2.0
+python-multipart~=0.0.5
+starlette~=0.17.1
+SQLAlchemy~=1.4.31

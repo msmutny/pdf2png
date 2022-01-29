@@ -13,5 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY *.pem ./
 COPY app/ app
+COPY certs/ certs
 
-CMD uvicorn app.api:app --host 0.0.0.0 --ssl-certfile cert.pem --ssl-keyfile key.pem --port 10443
+CMD uvicorn app.api:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile certs/key.pem --port 10443
