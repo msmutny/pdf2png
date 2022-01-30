@@ -15,4 +15,4 @@ COPY *.pem ./
 COPY app/ app
 COPY certs/ certs
 
-CMD uvicorn app.api:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile certs/key.pem --port 10443
+CMD uvicorn app.main:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile certs/key.pem --port 10443

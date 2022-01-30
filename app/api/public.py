@@ -1,30 +1,23 @@
 import io
 import base64
-from typing import List, Optional
-import warnings
+from typing import Optional
 
-from fastapi import FastAPI, HTTPException, status, UploadFile, File, Path
+from fastapi import HTTPException, status, UploadFile, File, Path, APIRouter
 from pydantic import UUID4
 from sqlmodel import Session, select
 from starlette.responses import StreamingResponse
 from sqlalchemy import func
 
 from app import models
-from app.db import create_db_and_tables, engine
+from app.db import engine
 from app.utils import generate_uuid
 from app.worker import convert_document
 
-tags_metadata = [{"name": "Public"}, {"name": "Admin"}]
-app = FastAPI(openapi_tags=tags_metadata)
 
-# Temporary workaround for #https://github.com/tiangolo/sqlmodel/issues/189
-warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of SQL compilation caching.*")
+router = APIRouter()
 
 
-################
-#  PUBLIC API  #
-################
-@app.post(
+@router.post(
     "/documents",
     tags=["Public"],
     status_code=status.HTTP_202_ACCEPTED,
@@ -49,7 +42,7 @@ def create_document(file: UploadFile = File(...), normalize: Optional[bool] = Tr
     return document_schema
 
 
-@app.get(
+@router.get(
     "/documents/{id:uuid}",
     tags=["Public"],
     response_model=models.DocumentSchema,
@@ -70,7 +63,7 @@ def get_document(id: UUID4):
     return document_schema
 
 
-@app.get(
+@router.get(
     "/documents/{id:uuid}/pages/{page_number:int}",
     tags=["Public"],
 )
@@ -85,68 +78,3 @@ def get_page(id: UUID4, page_number: int = Path(..., ge=1)):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         image: bytes = base64.b64decode(image_base64_encoded)
     return StreamingResponse(io.BytesIO(image), media_type="image/png")
-
-
-###############
-#  ADMIN API  #
-###############
-@app.get(
-    "/documents",
-    tags=["Admin"],
-    response_model=List[models.Document],
-    response_model_exclude=["n_pages"]
-)
-def get_documents():
-    with Session(engine) as session:
-        documents = session.exec(
-            select(models.Document)
-        )
-        return documents.all()
-
-
-@app.delete(
-    "/documents",
-    tags=["Admin"]
-)
-def delete_documents():
-    with Session(engine) as session:
-        documents_deleted = session.query(models.Document).delete()
-        pages_deleted = session.query(models.Page).delete()
-        session.commit()
-    return {
-        "documents_deleted": documents_deleted,
-        "pages_deleted": pages_deleted
-    }
-
-
-@app.delete(
-    "/documents/{id:uuid}",
-    tags=["Admin"]
-)
-def delete_document(id: UUID4):
-    with Session(engine) as session:
-        pages_deleted = session.query(models.Page).filter(models.Page.document_id == id).delete()
-        document = session.get(models.Document, id)
-        session.delete(document)
-        session.commit()
-    return {
-        "pages_deleted": pages_deleted
-    }
-
-
-@app.delete(
-    "/documents/{id:uuid}/pages",
-    tags=["Admin"]
-)
-def delete_pages(id: UUID4):
-    with Session(engine) as session:
-        pages_deleted = session.query(models.Page).filter(models.Page.document_id == id).delete()
-        session.commit()
-    return {
-        "pages_deleted": pages_deleted
-    }
-
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()

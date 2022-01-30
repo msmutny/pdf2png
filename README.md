@@ -30,7 +30,7 @@ docker-compose up workers rabbitmq
 ```
 Then you can start the server manually by running the following command
 ```
-uvicorn app.api:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile certs/key.pem --port 10443
+uvicorn app.main:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile certs/key.pem --port 10443
 ```
 <br/>
 
@@ -97,7 +97,6 @@ curl -X 'GET' -k \
   - tests
     - unit
     - e2e
-  - Postgres instead of sqlite
   - structure project nicely
   - use best practices
   - documentation for /redoc
@@ -105,11 +104,9 @@ curl -X 'GET' -k \
   - handle errors
     - status codes
     - err messages
-  - logging
-  - fix versions in requirements.txt
-  - add streaming endpoint
-    - progress bar (extra attribute in response json)
-  - crop PNG to 1200x1600 px
   - add missing type hints
   - add filenames to output and database
   - !!!! Flask instead of FastAPI !!!
+  - add streaming endpoint (nice to have, not quite sure how to implement using pdf2image)
+    - progress bar (extra attribute in response json)
+  - Postgres instead of sqlite (nice to have, but not necessary)
