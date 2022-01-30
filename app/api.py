@@ -3,15 +3,13 @@ import base64
 from typing import List
 import warnings
 
-from fastapi import FastAPI, HTTPException, status, UploadFile, File
+from fastapi import FastAPI, HTTPException, status, UploadFile, File, Path
 from pydantic import UUID4
 from sqlmodel import Session, select
 from starlette.responses import StreamingResponse
-from pdf2image import convert_from_bytes
 from sqlalchemy import func
 
 from app import models
-from app.settings import settings
 from app.db import create_db_and_tables, engine
 from app.utils import generate_uuid
 from app.worker import convert_document
@@ -33,8 +31,8 @@ warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of S
     response_model=models.DocumentSchema,
     response_model_include=["id"]
 )
-def create_document(pdf: UploadFile = File(...)):
-    content: bytes = pdf.file.read()
+def create_document(file: UploadFile = File(...)):
+    content: bytes = file.file.read()
     content_base64_encoded_bytes: bytes = base64.b64encode(content)
     document_base64_encoded_string: str = content_base64_encoded_bytes.decode('ascii')
 
@@ -61,7 +59,7 @@ def get_document(id: UUID4):
     with Session(engine) as session:
         document = session.get(models.Document, id)
         if not document:
-           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         n_pages: int = session.exec(
             select(func.count())
             .select_from(models.Page)
@@ -76,7 +74,7 @@ def get_document(id: UUID4):
     "/documents/{id:uuid}/pages/{page_number:int}",
     tags=["Public"],
 )
-def get_page(id: UUID4, page_number: int):
+def get_page(id: UUID4, page_number: int = Path(..., ge=1)):
     with Session(engine) as session:
         image_base64_encoded = session.exec(
             select(models.Page.image)
