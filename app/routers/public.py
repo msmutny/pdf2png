@@ -21,7 +21,12 @@ router = APIRouter()
     response_model_include=["id"]
 )
 def create_document(file: UploadFile = File(...), normalize: Optional[bool] = True):
-    return service.process_document(file.file.read(), generate_uuid(), normalize)
+    return service.process_document(
+        data=file.file.read(),
+        filename=file.filename,
+        document_id=generate_uuid(),
+        normalize=normalize
+    )
 
 
 @router.get(
@@ -31,10 +36,7 @@ def create_document(file: UploadFile = File(...), normalize: Optional[bool] = Tr
     response_model_include=["status", "n_pages"]
 )
 def get_document(id: UUID4):
-    document: schemas.DocumentSchema = service.get_document(id)
-    print(document)
-    print(document.dict())
-    return document
+    return service.get_document(id)
 
 
 @router.get(

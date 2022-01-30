@@ -59,7 +59,7 @@ https://localhost:10443/docs
 ```
 
 ### Curl
-`POST /documents` example
+#### POST /documents
 ```
 curl -X 'POST' -k \
   'https://localhost:10443/documents' \
@@ -70,7 +70,7 @@ curl -X 'POST' -k \
 
 <br/>
 
-`GET /documents/{id}` example
+#### GET /documents/{id}
 ```
 curl -X 'GET' -k \
   'https://localhost:10443/documents/{id}' \
@@ -80,7 +80,7 @@ curl -X 'GET' -k \
 
 <br/>
 
-`GET /documents/{id}/pages/{page_number}` example
+#### GET /documents/{id}/pages/{page_number}
 ```
 curl -X 'GET' -k \
   'https://localhost:10443/documents/{id}/pages/{page_number}' \
@@ -97,15 +97,10 @@ curl -X 'GET' -k \
   - tests
     - unit
     - e2e
-  - structure project nicely
-  - use best practices
   - documentation for /redoc
-  - finish readme
   - handle errors
     - status codes
     - err messages
-  - add missing type hints
-  - add filenames to output and database
   - !!!! Flask instead of FastAPI !!!
   - add streaming endpoint (nice to have, not quite sure how to implement using pdf2image)
     - progress bar (extra attribute in response json)

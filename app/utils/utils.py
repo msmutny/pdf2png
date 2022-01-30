@@ -11,13 +11,13 @@ def generate_uuid() -> uuid.UUID:
     return val
 
 
-def bytes_to_base64_encoded_string(data: bytes):
+def bytes_to_base64_encoded_string(data: bytes) -> str:
     data_base64_encoded_bytes: bytes = base64.b64encode(data)
     data_base64_encoded_string: str = data_base64_encoded_bytes.decode('ascii')
     return data_base64_encoded_string
 
 
-def base64_encoded_string_to_bytes(string: str):
+def base64_encoded_string_to_bytes(string: str) -> bytes:
     data_base64_encoded_bytes: bytes = string.encode('ascii')
     data_base64_decoded: bytes = base64.b64decode(data_base64_encoded_bytes)
     return data_base64_decoded

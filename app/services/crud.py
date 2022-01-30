@@ -14,9 +14,9 @@ from app.config.db import engine
 # TODO - remove HTTP related stuff
 
 
-def add_document(document_id: UUID4) -> schemas.DocumentSchema:
+def add_document(document_id: UUID4, filename: str) -> schemas.DocumentSchema:
     with Session(engine) as session:
-        document = models.Document(id=document_id)
+        document = models.Document(id=document_id, filename=filename)
         session.add(document)
         session.commit()
         session.refresh(document)
@@ -52,7 +52,7 @@ def get_page(document_id: UUID4, page_number: int) -> bytes:
     return image
 
 
-def add_pages(document_id: UUID4, images: List[bytes]):
+def add_pages(document_id: UUID4, images: List[bytes]) -> None:
     with Session(engine) as session:
         document = session.get(models.Document, document_id)
         if not document:
@@ -67,4 +67,36 @@ def add_pages(document_id: UUID4, images: List[bytes]):
         session.add(document)
         session.commit()
 
+
+def get_documents() -> List[schemas.DocumentSchema]:
+    with Session(engine) as session:
+        documents_db = session.exec(
+            select(models.Document)
+        ).all()
+        documents = [schemas.DocumentSchema(**d.dict()) for d in documents_db]
+    return documents
+
+
+def delete_documents() -> schemas.ItemsToDeleteSchema:
+    with Session(engine) as session:
+        documents_deleted = session.query(models.Document).delete()
+        pages_deleted = session.query(models.Page).delete()
+        session.commit()
+    return schemas.ItemsToDeleteSchema(documents_deleted=documents_deleted, pages_deleted=pages_deleted)
+
+
+def delete_document(document_id: UUID4) -> schemas.ItemsToDeleteSchema:
+    with Session(engine) as session:
+        pages_deleted = session.query(models.Page).filter(models.Page.document_id == document_id).delete()
+        document = session.get(models.Document, document_id)
+        session.delete(document)
+        session.commit()
+    return schemas.ItemsToDeleteSchema(pages_deleted=pages_deleted)
+
+
+def delete_pages(document_id: UUID4) -> schemas.ItemsToDeleteSchema:
+    with Session(engine) as session:
+        pages_deleted = session.query(models.Page).filter(models.Page.document_id == document_id).delete()
+        session.commit()
+    return schemas.ItemsToDeleteSchema(pages_deleted=pages_deleted)
 

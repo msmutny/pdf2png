@@ -35,8 +35,8 @@ crop_box = CropBox(x=1200, y=1600)
 crop_box_aspect_ratio = crop_box.x / crop_box.y
 
 
-def normalize_image(image: "PIL.Image"):
-    image_aspect_ratio: float = image.size[0] / image.size[1]
+def normalize_image(image: PIL.Image) -> PIL.Image:
+    image_aspect_ratio = image.size[0] / image.size[1]
     if image_aspect_ratio < crop_box_aspect_ratio:
         x_ratio = crop_box.y / image.size[1]
         normalized_size = (int(image.size[0]*x_ratio), crop_box.y)
@@ -47,13 +47,13 @@ def normalize_image(image: "PIL.Image"):
     return image.resize(normalized_size)
 
 
-def convert_pil_image_to_byte_image(pil_image: "PIL.Image", normalize: bool) -> bytes:
+def convert_pil_image_to_byte_image(pil_image: PIL.Image, normalize: bool) -> bytes:
     if normalize:
         pil_image = normalize_image(pil_image)
-    img_byte_arr = io.BytesIO()
-    pil_image.save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
-    return img_byte_arr
+    image_bytes_array: io.BytesIO = io.BytesIO()
+    pil_image.save(image_bytes_array, format='PNG')
+    image_bytes_array: bytes = image_bytes_array.getvalue()
+    return image_bytes_array
 
 
 def convert_pil_images_to_byte_images(pil_images: List["PIL.Image"], normalize: bool) -> List[bytes]:
