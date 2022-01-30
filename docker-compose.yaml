@@ -1,4 +1,4 @@
-# Run `docker-compose build` to build an image for api and workers containers.
+# Run `docker-compose build` to build an image for routers and workers containers.
 # Run `docker-compose up` to run all containers.
 
 version: "3.4"
@@ -29,7 +29,7 @@ services:
 
   workers:
     image: pdfservice
-    entrypoint: dramatiq app.worker
+    entrypoint: dramatiq app.workers
     restart: on-failure
     environment:
       - RABBITMQ_HOST=rabbitmq

@@ -2,8 +2,8 @@ import warnings
 
 from fastapi import FastAPI
 
-from app.api import public, admin
-from app.db import create_db_and_tables
+from app.routers import public, admin
+from app.config.db import create_db_and_tables
 
 
 tags_metadata = [{"name": "Public"}, {"name": "Admin"}]

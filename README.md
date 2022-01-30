@@ -34,9 +34,9 @@ uvicorn app.main:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile 
 ```
 <br/>
 
-You can also run the `worker` manually using
+You can also run the `workers` manually using
 ```
-dramatiq app.worker
+dramatiq app.workers
 ```
 In such case, Windows users need to install the `poppler` dependency manually from [here](https://blog.alivate.com.au/poppler-windows/), see [stackoverflow here](https://stackoverflow.com/questions/18381713/how-to-install-poppler-on-windows)
 
