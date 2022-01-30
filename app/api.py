@@ -1,6 +1,6 @@
 import io
 import base64
-from typing import List
+from typing import List, Optional
 import warnings
 
 from fastapi import FastAPI, HTTPException, status, UploadFile, File, Path
@@ -31,7 +31,7 @@ warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of S
     response_model=models.DocumentSchema,
     response_model_include=["id"]
 )
-def create_document(file: UploadFile = File(...)):
+def create_document(file: UploadFile = File(...), normalize: Optional[bool] = True):
     content: bytes = file.file.read()
     content_base64_encoded_bytes: bytes = base64.b64encode(content)
     document_base64_encoded_string: str = content_base64_encoded_bytes.decode('ascii')
@@ -44,7 +44,7 @@ def create_document(file: UploadFile = File(...)):
         session.refresh(document)
         document_schema = models.DocumentSchema(**document.dict())
 
-    convert_document.send(str(uuid), document_base64_encoded_string)
+    convert_document.send(str(uuid), document_base64_encoded_string, normalize)
 
     return document_schema
 

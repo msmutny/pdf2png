@@ -83,7 +83,7 @@ curl -X 'GET' -k \
 `GET /documents/{id}/pages/{page_number}` example
 ```
 curl -X 'GET' -k \
-  'https://localhost:10443/documents/{id}}/pages/{page_number}' \
+  'https://localhost:10443/documents/{id}/pages/{page_number}' \
   -H 'accept: image/png' \
   --output {output_file}
 ```
