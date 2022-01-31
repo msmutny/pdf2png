@@ -4,7 +4,7 @@ EXPOSE 10443
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
     && pip install psycopg2 \
-	&& apt-get -y install poppler-utils
+    && apt-get -y install poppler-utils
 
 WORKDIR /usr/src/app
 

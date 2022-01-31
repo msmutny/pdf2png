@@ -1,6 +1,7 @@
 # Pdf2Png converter
 
-Simple FastAPI web app for converting PDF documents to PNG images, one image per page.
+Simple FastAPI web app for converting PDF documents to PNG images, one image per page. \
+It uses rabbitmq message broker to offload the workload to workers running in a separate container.
 
 
 ## How to build and run Pdf2Png converter
@@ -21,24 +22,6 @@ You can run all 3 services from the project root folder using the following comm
 ```
 docker-compose up
 ```
-<br/>
-
-You can also run only a subset of these 3 services, for example `workers` and `rabbitmq`. 
-In such case run the following command
-```
-docker-compose up workers rabbitmq
-```
-Then you can start the server manually by running the following command
-```
-uvicorn app.main:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile certs/key.pem --port 10443
-```
-<br/>
-
-You can also run the `workers` manually using
-```
-dramatiq app.workers
-```
-In such case, Windows users need to install the `poppler` dependency manually from [here](https://blog.alivate.com.au/poppler-windows/), see [stackoverflow here](https://stackoverflow.com/questions/18381713/how-to-install-poppler-on-windows)
 
 
 ## How to use Pdf2Png converter
@@ -93,10 +76,31 @@ curl -X 'GET' -k \
 
 <br/>
 
+### For developers
+You can also mimic running the `workers` and/or `api` service manually.
+- In order to start a web server with the main app, run the following command
+```
+uvicorn app.main:app --host 0.0.0.0 --ssl-certfile certs/cert.pem --ssl-keyfile certs/key.pem --port 10443
+```
+
+- For running the workers, use the command below. Note that it needs these dependencies:
+  - `poppler-utils`
+    - Linux `sudo apt-get install -y poppler-utils`
+    - Windows download from  [here](https://blog.alivate.com.au/poppler-windows/), see [stackoverflow here](https://stackoverflow.com/questions/18381713/how-to-install-poppler-on-windows)
+```
+dramatiq app.workers
+```
+<br/>
+
+#### Running the tests
+Use the following command from project root folder to run the tests:
+```
+pytest -v .
+```
+You'll need 2 more extra dependencies -- `pytest` and `requests` -- see `requirements-dev.txt`
+
+
 ## TODO
-  - tests
-    - unit
-    - integration/e2e
   - Flask instead of FastAPI
   - documentation for /redoc
   - add streaming endpoint (nice to have, not quite sure how to implement using pdf2image)

@@ -11,6 +11,7 @@ import PIL.Image
 from pdf2image.exceptions import PDFPageCountError
 from pydantic.types import UUID4
 
+from app.config.db import get_session
 from app.config.settings import settings
 from app.services import crud
 from app.utils.utils import base64_encoded_string_to_bytes
@@ -33,26 +34,25 @@ dramatiq.set_broker(rabbitmq_broker)
 # dramatiq.set_broker(redis_broker)
 
 
-CropBox = namedtuple('CropBox', 'x y')
-crop_box = CropBox(x=1200, y=1600)
+ImageSize = namedtuple('ImageSize', 'x y')
+crop_box = ImageSize(x=1200, y=1600)
 crop_box_aspect_ratio = crop_box.x / crop_box.y
 
 
-def normalize_image(image: PIL.Image) -> PIL.Image:
-    image_aspect_ratio = image.size[0] / image.size[1]
+def get_normalized_size(image_size: ImageSize) -> ImageSize:
+    image_aspect_ratio = image_size.x / image_size.y
     if image_aspect_ratio < crop_box_aspect_ratio:
-        x_ratio = crop_box.y / image.size[1]
-        normalized_size = (int(image.size[0]*x_ratio), crop_box.y)
+        x_ratio = crop_box.y / image_size.y
+        return ImageSize(int(image_size.x*x_ratio), crop_box.y)
     else:
-        y_ratio = crop_box.x / image.size[0]
-        normalized_size = (crop_box.x, int(image.size[1]*y_ratio))
-    assert normalized_size <= crop_box
-    return image.resize(normalized_size)
+        y_ratio = crop_box.x / image_size.x
+        return ImageSize(crop_box.x, int(image_size.y*y_ratio))
 
 
 def convert_pil_image_to_byte_image(pil_image: PIL.Image, normalize: bool) -> bytes:
     if normalize:
-        pil_image = normalize_image(pil_image)
+        normalized_size = get_normalized_size(ImageSize(*pil_image.size))
+        pil_image = pil_image.resize(normalized_size)
     image_bytes_array: io.BytesIO = io.BytesIO()
     pil_image.save(image_bytes_array, format='PNG')
     image_bytes_array: bytes = image_bytes_array.getvalue()
@@ -71,7 +71,7 @@ def convert_document(document_id_str: str, document_base64_encoded: str, normali
         pages_pil: List["PIL.Image"] = convert_from_bytes(content_base64_decoded, poppler_path=settings.poppler_path)
     except PDFPageCountError:
         logging.warning(f'Malformed PDF file for document {str(document_id)}')
-        crud.update_document_with_status(document_id=document_id, status='error')
+        crud.update_document_with_status(next(get_session()), document_id=document_id, status='error')
         return
     images_bytes: List[bytes] = convert_pil_images_to_byte_images(pages_pil, normalize)
-    crud.add_pages_and_update_document(document_id, images_bytes)
+    crud.add_pages_and_update_document(next(get_session()), document_id, images_bytes)
