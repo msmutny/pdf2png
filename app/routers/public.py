@@ -21,6 +21,8 @@ router = APIRouter()
     response_model_include=["id"]
 )
 def create_document(file: UploadFile = File(...), normalize: Optional[bool] = True):
+    if file.content_type != 'application/pdf':
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
     return service.process_document(
         data=file.file.read(),
         filename=file.filename,
@@ -36,7 +38,10 @@ def create_document(file: UploadFile = File(...), normalize: Optional[bool] = Tr
     response_model_include=["status", "n_pages"]
 )
 def get_document(id: UUID4):
-    return service.get_document(id)
+    document: schemas.DocumentSchema = service.get_document(id)
+    if not document:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return document
 
 
 @router.get(
@@ -46,4 +51,6 @@ def get_document(id: UUID4):
 )
 def get_page(id: UUID4, page_number: int = Path(..., ge=1)):
     image: bytes = service.get_page(id, page_number)
+    if not image:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return StreamingResponse(io.BytesIO(image), media_type="image/png")

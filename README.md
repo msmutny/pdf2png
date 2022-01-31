@@ -96,12 +96,9 @@ curl -X 'GET' -k \
 ## TODO
   - tests
     - unit
-    - e2e
+    - integration/e2e
+  - Flask instead of FastAPI
   - documentation for /redoc
-  - handle errors
-    - status codes
-    - err messages
-  - !!!! Flask instead of FastAPI !!!
   - add streaming endpoint (nice to have, not quite sure how to implement using pdf2image)
     - progress bar (extra attribute in response json)
   - Postgres instead of sqlite (nice to have, but not necessary)

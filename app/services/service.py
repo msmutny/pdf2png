@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import UUID4
 
@@ -7,26 +7,24 @@ from app.services import crud
 from app.utils.utils import bytes_to_base64_encoded_string
 from app.workers.document_converter import convert_document
 
-# TODO - remove HTTP related stuff
-
 
 def process_document(data: bytes, filename: str, document_id: UUID4, normalize: bool) -> schemas.DocumentSchema:
     document_base64_encoded_string: str = bytes_to_base64_encoded_string(data)
     document = crud.add_document(document_id, filename)
-    convert_document.send(str(document_id), document_base64_encoded_string, normalize)
+    convert_document.send(document_id.hex, document_base64_encoded_string, normalize)
     return document
 
 
-def get_document(document_id: UUID4) -> schemas.DocumentSchema:
+def get_document(document_id: UUID4) -> Optional[schemas.DocumentSchema]:
     return crud.get_document(document_id)
 
 
-def get_page(document_id: UUID4, page_number: int) -> bytes:
+def get_page(document_id: UUID4, page_number: int) -> Optional[bytes]:
     return crud.get_page(document_id, page_number)
 
 
 def add_pages_to_db(document_id: UUID4, images: List[bytes]) -> None:
-    crud.add_pages(document_id, images)
+    crud.add_pages_and_update_document(document_id, images)
 
 
 def get_documents() -> List[schemas.DocumentSchema]:

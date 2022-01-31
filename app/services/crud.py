@@ -1,17 +1,13 @@
 import base64
 import logging
-from typing import List
+from typing import List, Optional
 
-from fastapi import HTTPException
 from sqlalchemy import func
 from sqlmodel import Session, select
-from starlette import status
 from pydantic import UUID4
 
 from app import models, schemas
 from app.config.db import engine
-
-# TODO - remove HTTP related stuff
 
 
 def add_document(document_id: UUID4, filename: str) -> schemas.DocumentSchema:
@@ -24,11 +20,11 @@ def add_document(document_id: UUID4, filename: str) -> schemas.DocumentSchema:
     return document_schema
 
 
-def get_document(document_id: UUID4) -> schemas.DocumentSchema:
+def get_document(document_id: UUID4) -> Optional[schemas.DocumentSchema]:
     with Session(engine) as session:
         document = session.get(models.Document, document_id)
         if not document:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            return None
         n_pages: int = session.exec(
             select(func.count())
             .select_from(models.Page)
@@ -39,7 +35,15 @@ def get_document(document_id: UUID4) -> schemas.DocumentSchema:
     return document_schema
 
 
-def get_page(document_id: UUID4, page_number: int) -> bytes:
+def update_document_with_status(document_id: UUID4, status: str) -> None:
+    with Session(engine) as session:
+        document = session.get(models.Document, document_id)
+        document.status = status
+        session.add(document)
+        session.commit()
+
+
+def get_page(document_id: UUID4, page_number: int) -> Optional[bytes]:
     with Session(engine) as session:
         image_base64_encoded = session.exec(
             select(models.Page.image)
@@ -47,12 +51,12 @@ def get_page(document_id: UUID4, page_number: int) -> bytes:
             .where(models.Page.document_id == document_id, models.Page.page_number == page_number)
         ).first()
         if not image_base64_encoded:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            return None
         image: bytes = base64.b64decode(image_base64_encoded)
     return image
 
 
-def add_pages(document_id: UUID4, images: List[bytes]) -> None:
+def add_pages_and_update_document(document_id: UUID4, images: List[bytes]) -> None:
     with Session(engine) as session:
         document = session.get(models.Document, document_id)
         if not document:

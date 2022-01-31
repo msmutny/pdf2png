@@ -1,4 +1,5 @@
 import io
+import logging
 import uuid
 from collections import namedtuple
 from typing import List
@@ -7,6 +8,8 @@ import dramatiq
 from dramatiq.brokers.rabbitmq import RabbitmqBroker
 from pdf2image import convert_from_bytes
 import PIL.Image
+from pdf2image.exceptions import PDFPageCountError
+from pydantic.types import UUID4
 
 from app.config.settings import settings
 from app.services import crud
@@ -62,8 +65,13 @@ def convert_pil_images_to_byte_images(pil_images: List["PIL.Image"], normalize: 
 
 @dramatiq.actor
 def convert_document(document_id_str: str, document_base64_encoded: str, normalize=True):
-    document_id: uuid.UUID = uuid.UUID(document_id_str)
+    document_id: UUID4 = uuid.UUID(document_id_str)
     content_base64_decoded: bytes = base64_encoded_string_to_bytes(document_base64_encoded)
-    pages_pil: List["PIL.Image"] = convert_from_bytes(content_base64_decoded, poppler_path=settings.poppler_path)
+    try:
+        pages_pil: List["PIL.Image"] = convert_from_bytes(content_base64_decoded, poppler_path=settings.poppler_path)
+    except PDFPageCountError:
+        logging.warning(f'Malformed PDF file for document {str(document_id)}')
+        crud.update_document_with_status(document_id=document_id, status='error')
+        return
     images_bytes: List[bytes] = convert_pil_images_to_byte_images(pages_pil, normalize)
-    crud.add_pages(document_id, images_bytes)
+    crud.add_pages_and_update_document(document_id, images_bytes)
