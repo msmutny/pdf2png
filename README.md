@@ -1,6 +1,6 @@
 # Pdf2Png converter
 
-Simple FastAPI web app for converting PDF documents to PNG images, one image per page. \
+Simple FastAPI/Flask web app for converting PDF documents to PNG images, one image per page. \
 It uses rabbitmq message broker to offload the workload to workers running in a separate container.
 
 
